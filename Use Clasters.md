@@ -75,6 +75,30 @@ in the master, for starting replication input this code:
 ```sql 
 CREATE USER 'repl'@'%' IDENTIFIED WITH mysql_native_password BY 'password'; GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%'; FLUSH PRIVILEGES; SHOW MASTER STATUS;
 ```
+## Create TABLE and DATABASES for both, master and slave
+create the table in the master folder, and also slaves, for open mysql terminal where instruction have to be writen use this command:
+for the master
+```shell
+docker exec -it mysql-master mysql -u root -p 
+```
+for slave (both of them)
+```shell
+docker exec -it mysql-slave-1 mysql -u root -p 
+```
+For each of them insert this commands
+```sql
+CREATE DATABASE imdb;
+USE imdb;
+
+CREATE TABLE name_basics (
+    nconst VARCHAR(15) PRIMARY KEY,
+    primaryName VARCHAR(255),
+    birthYear VARCHAR(4),
+    deathYear VARCHAR(4),
+    primaryProfession VARCHAR(255),
+    knownForTitles VARCHAR(255)
+);
+```
 ## Connect Master with Slaves 
 first of all find out what is the Master data, for that exec master sql:
 ```shell
@@ -102,21 +126,6 @@ wget https://datasets.imdbws.com/name.basics.tsv.gz
 Also to unzip it:
 ```shell
 gunzip name.basics.tsv.gz
-```
-## Add data in the master  and slaves
-create the table in the master folder, and also slaves
-```sql
-CREATE DATABASE imdb;
-USE imdb;
-
-CREATE TABLE name_basics (
-    nconst VARCHAR(15) PRIMARY KEY,
-    primaryName VARCHAR(255),
-    birthYear VARCHAR(4),
-    deathYear VARCHAR(4),
-    primaryProfession VARCHAR(255),
-    knownForTitles VARCHAR(255)
-);
 ```
 import data from the data folder in the master one
 ```sql
