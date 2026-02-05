@@ -111,7 +111,7 @@ CREATE TABLE name_basics (
 ```sql
 COPY name_basics 
 FROM '/var/lib/postgresql/csv_data/name.basics.tsv' 
-DELIMITER E'\t' CSV HEADER;
+WITH (FORMAT csv, DELIMITER E'\t', HEADER true, QUOTE E'\b');
 ```
 ## Indexing (Full-Text Search)
 PostgreSQL handles full-text indexing using tsvector and GIN indexes instead of MySQL's MATCH/AGAINST.
