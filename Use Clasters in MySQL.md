@@ -1,4 +1,4 @@
-# Docker Helper
+# Docker Helper in MySQL
 Cluster in MySQL is a to copy your main database throw other databases, so if one of the broke up u can use another, in our example we will have this folder structure ( Master - > Slave ) :
 ```
 ./data
