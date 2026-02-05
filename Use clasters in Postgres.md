@@ -10,35 +10,54 @@ docker-compose.yml
 first of all every cluster in a container, so in our `docker-compose.yml` we have to define details of all this components:
 ```yml
 version: '3.8'
+
 services:
-  master:
-    image: mysql:8.0
-    container_name: mysql-master
+  pg-primary:
+    image: postgres:15
+    container_name: postgres-primary
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: imdb
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - ./master/my.cnf:/etc/mysql/my.cnf
-      - ./data:/var/lib/mysql-files
-  slave1:
-    image: mysql:8.0
-    container_name: mysql-slave-1
+      - ./primary/setup-replication.sh:/docker-entrypoint-initdb.d/setup-replication.sh
+      - ./data:/var/lib/postgresql/csv_data
+
+  pg-replica-1:
+    image: postgres:15
+    container_name: postgres-replica-1
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      PGPASSWORD: password
     ports:
-      - "3307:3306"
-    volumes:
-      - ./slave1/my.cnf:/etc/mysql/my.cnf
-  slave2:
-    image: mysql:8.0
-    container_name: mysql-slave-2
+      - "5433:5432"
+    depends_on:
+      - pg-primary
+    entrypoint: >
+      bash -c "
+      until pg_basebackup -h pg-primary -D /var/lib/postgresql/data -U replicator -v -P -X stream; do
+        echo 'Waiting for primary...'
+        sleep 1
+      done
+      exec postgres"
+
+  pg-replica-2:
+    image: postgres:15
+    container_name: postgres-replica-2
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      PGPASSWORD: password
     ports:
-      - "3308:3306"
-    volumes:
-      - ./slave2/my.cnf:/etc/mysql/my.cnf
+      - "5434:5432"
+    depends_on:
+      - pg-primary
+    entrypoint: >
+      bash -c "
+      until pg_basebackup -h pg-primary -D /var/lib/postgresql/data -U replicator -v -P -X stream; do
+        echo 'Waiting for primary...'
+        sleep 1
+      done
+      exec postgres"
 ```
 ## Ensure the data replication
 PostgreSQL needs a user with the REPLICATION privilege to allow the replicas to connect.</br>
